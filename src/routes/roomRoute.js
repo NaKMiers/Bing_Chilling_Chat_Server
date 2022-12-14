@@ -6,6 +6,7 @@ router.get('/:userId', RoomController.getAllRooms)
 router.post('/', RoomController.createRoom)
 router.patch('/:id/join', RoomController.joinRoom)
 router.patch('/:id/leave', RoomController.leaveRoom)
+router.patch('/:id/password', RoomController.changePassword)
 router.put('/:id', RoomController.editRoom)
 router.delete('/:id', RoomController.deleteRoom)
 

@@ -54,9 +54,11 @@ class ChatController {
                   const validity = await bcrypt.compare(req.body.password, room.password)
                   console.log(validity)
                   if (validity) {
-                     const newRoom = await RoomModel.findByIdAndUpdate(req.params.id, {
-                        $push: { members: userId },
-                     })
+                     const newRoom = await RoomModel.findByIdAndUpdate(
+                        req.params.id,
+                        { $push: { members: userId } },
+                        { new: true }
+                     )
 
                      const { password, ...otherDetails } = newRoom._doc
                      res.status(200).json(otherDetails)
@@ -64,9 +66,11 @@ class ChatController {
                      res.status(403).json({ message: 'Wrong Password' })
                   }
                } else {
-                  const newRoom = await RoomModel.findByIdAndUpdate(req.params.id, {
-                     $push: { members: userId },
-                  })
+                  const newRoom = await RoomModel.findByIdAndUpdate(
+                     req.params.id,
+                     { $push: { members: userId } },
+                     { new: true }
+                  )
                   const { password, ...otherDetails } = newRoom._doc
                   res.status(200).json(otherDetails)
                }
@@ -108,22 +112,47 @@ class ChatController {
    // [PUT]: /rooms/:id/edit
    editRoom = async function (req, res) {
       console.log('editRoom')
-      const { userId, password } = req.body
+      const { userId, avatar } = req.body
 
+      if (!avatar) delete req.body.avatar
+
+      try {
+         const room = await RoomModel.findById(req.params.id)
+         if (room.host === userId) {
+            const roomUpdated = await RoomModel.findByIdAndUpdate(req.params.id, req.body, {
+               new: true,
+            })
+            const { password, ...otherDetails } = roomUpdated._doc
+            console.log('roomUpdated._doc: ', roomUpdated._doc)
+            res.status(200).json(otherDetails)
+         } else {
+            res.status(403).json({ message: 'You can only edit your own room' })
+         }
+      } catch (err) {
+         res.status(500).json({ message: err.message })
+      }
+   }
+
+   // [PATCH]: /rooms/:id/password
+   changePassword = async function (req, res) {
+      console.log('changePassword')
+      const { userId, password } = req.body
       if (password) {
          const salt = await bcrypt.genSalt(10)
-         const hashedPass = await bcrypt.hash(req.body.password, salt)
-         req.body.password = hashedPass
+         const hashedPash = await bcrypt.hash(password, salt)
+         req.body.password = hashedPash
       }
 
       try {
          const room = await RoomModel.findById(req.params.id)
          if (room.host === userId) {
             await room.updateOne(req.body)
-            res.status(200).json('Edited')
+            res.status(200).json({ message: 'Edited' })
          } else {
-            res.status(403).json('You can only edit your own room')
+            res.status(403).json({ message: 'You can only change your own room' })
          }
+
+         res.status(200).json()
       } catch (err) {
          res.status(500).json({ message: err.message })
       }

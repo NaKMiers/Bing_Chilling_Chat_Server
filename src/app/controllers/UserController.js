@@ -20,6 +20,8 @@ class UserController {
    editProfile = async function (req, res, next) {
       console.log('editProfile')
 
+      if (!req.body.avatar) delete req.body.avatar
+
       try {
          const user = await UserModel.findOneAndUpdate({ _id: req.params.id }, req.body, {
             new: true,

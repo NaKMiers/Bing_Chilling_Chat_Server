@@ -2,6 +2,23 @@ const RoomModel = require('../models/RoomModel')
 const bcrypt = require('bcrypt')
 
 class ChatController {
+   // [GET]: /rooms/:id
+   getAllRooms = async function (req, res) {
+      console.log('getAllRoom')
+      const { userId } = req.params
+      console.log('userId: ', userId)
+      try {
+         let rooms = await RoomModel.find({ members: { $in: [userId] } })
+         rooms = rooms.map(room => {
+            const { password, ...otherDetails } = room._doc
+            return otherDetails
+         })
+         res.status(200).json(rooms)
+      } catch (err) {
+         res.status(500).json({ message: err.message })
+      }
+   }
+
    // [POST]: /rooms
    createRoom = async function (req, res) {
       console.log('createRoom')
@@ -18,7 +35,7 @@ class ChatController {
          const room = await newRoom.save()
 
          const { password, ...otherDetails } = room._doc
-         res.status(200).json({ room: otherDetails })
+         res.status(200).json(otherDetails)
       } catch (err) {
          res.status(500).json({ message: err.message })
       }
@@ -37,31 +54,36 @@ class ChatController {
                   const validity = await bcrypt.compare(req.body.password, room.password)
                   console.log(validity)
                   if (validity) {
-                     await room.updateOne({ $push: { members: userId } })
-                     res.status(200).json('Joined')
+                     const newRoom = await RoomModel.findByIdAndUpdate(req.params.id, {
+                        $push: { members: userId },
+                     })
+
+                     const { password, ...otherDetails } = newRoom._doc
+                     res.status(200).json(otherDetails)
                   } else {
-                     res.status(403).json('Wrong Password')
+                     res.status(403).json({ message: 'Wrong Password' })
                   }
                } else {
-                  await room.updateOne({ $push: { members: userId } })
-                  res.status(200).json('Joined')
+                  const newRoom = await RoomModel.findByIdAndUpdate(req.params.id, {
+                     $push: { members: userId },
+                  })
+                  const { password, ...otherDetails } = newRoom._doc
+                  res.status(200).json(otherDetails)
                }
             } else {
-               res.status(403).json('Your are already in room.')
+               res.status(403).json({ message: 'Your are already in room.' })
             }
          } else {
-            res.status(403).json('Room does not exists')
+            res.status(403).json({ message: 'Room does not exists' })
          }
-
-         res.status(200).json()
       } catch (err) {
          res.status(500).json({ message: err.message })
       }
    }
 
-   // [POST]: /rooms/:id
-   quitRoom = async function (req, res) {
-      console.log('quitRoom')
+   // [POST]: /rooms/:id/leave
+   leaveRoom = async function (req, res) {
+      console.log('leaveRoom')
       const { userId } = req.body
 
       try {
@@ -69,7 +91,7 @@ class ChatController {
          if (room) {
             if (room.members.includes(userId)) {
                await room.updateOne({ $pull: { members: userId } })
-               res.status(200).json('Quited')
+               res.status(200).json('Leaved')
             } else {
                res.status(403).json('Your are not in room.')
             }

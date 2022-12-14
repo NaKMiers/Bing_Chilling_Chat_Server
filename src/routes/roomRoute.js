@@ -2,9 +2,10 @@ const express = require('express')
 const router = express.Router()
 const RoomController = require('../app/controllers/RoomController')
 
+router.get('/:userId', RoomController.getAllRooms)
 router.post('/', RoomController.createRoom)
 router.patch('/:id/join', RoomController.joinRoom)
-router.patch('/:id/quit', RoomController.quitRoom)
+router.patch('/:id/leave', RoomController.leaveRoom)
 router.put('/:id', RoomController.editRoom)
 router.delete('/:id', RoomController.deleteRoom)
 

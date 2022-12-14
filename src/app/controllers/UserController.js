@@ -35,18 +35,20 @@ class UserController {
    changePassword = async function (req, res, next) {
       console.log('changePassword')
 
-      const salt = await bcrypt.genSalt(10)
-      const hashPass = await bcrypt.hash(req.body.password, salt)
-      req.body.password = hashPass
+      const { password, newPassword } = req.body
 
       try {
-         const user = await UserModel.findOneAndUpdate({ _id: req.params.id }, req.body, {
-            new: true,
-         })
-         const { password, ...otherDetails } = user._doc
+         const user = await UserModel.findById(req.params.id)
+         const validity = await bcrypt.compare(password, user.password)
+         if (validity) {
+            const salt = await bcrypt.genSalt(10)
+            const hashPass = await bcrypt.hash(newPassword, salt)
 
-         res.status(200).json(otherDetails)
-         res.status(200).json()
+            await user.updateOne({ password: hashPass })
+            res.status(200).json({ message: 'Password Changed' })
+         } else {
+            res.status(403).json({ message: 'Wrong password' })
+         }
       } catch (err) {
          res.status(500).json({ message: err.message })
       }

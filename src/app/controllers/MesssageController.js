@@ -10,6 +10,7 @@ class MesssageController {
 
       try {
          const room = await RoomModel.findById(req.params.roomId)
+         // console.log('room: ', room)
          if (room.members.includes(userId)) {
             const messages = await MessageModel.find({ roomId: req.params.roomId })
             res.status(200).json(messages)
@@ -24,6 +25,7 @@ class MesssageController {
    //[POST]: /messages
    createMessage = async function (req, res) {
       console.log('createMessage')
+      console.log('req.body: ', req.body)
 
       try {
          const newMessage = new MessageModel(req.body)
@@ -38,6 +40,7 @@ class MesssageController {
    editMessage = async function (req, res) {
       console.log('editMessage')
       const { userId } = req.body
+
       try {
          const message = await MessageModel.findById(req.params.id)
          if (message.senderId === userId) {

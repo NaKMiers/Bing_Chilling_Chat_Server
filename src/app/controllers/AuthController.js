@@ -6,13 +6,13 @@ class AuthController {
    // [POST]: /auth/login
    login = async function (req, res, next) {
       console.log('login')
-      const { username } = req.body
+      const { username, password } = req.body
 
       try {
          const user = await UserModel.findOne({ username })
 
          if (user) {
-            const validity = await bcrypt.compare(req.body.password, user.password)
+            const validity = await bcrypt.compare(password, user.password)
             if (validity) {
                const token = jwt.sign(
                   { id: user._id, username: user.username },
@@ -22,10 +22,10 @@ class AuthController {
                const { password, ...otherDetails } = user._doc
                res.status(200).json({ user: otherDetails, token })
             } else {
-               res.status(403).json('Wrong Password.')
+               res.status(401).json({ error: true, message: 'Wrong password' })
             }
          } else {
-            res.status(403).json('User does not exists.')
+            res.status(401).json({ error: true, message: 'User does not exists.' })
          }
       } catch (err) {
          res.status(500).json({ message: err.message })
@@ -57,7 +57,7 @@ class AuthController {
             const { password, ...otherDetails } = user._doc
             res.status(200).json({ user: otherDetails, token })
          } else {
-            res.status(403).json('User is already exists.')
+            res.status(401).json({ error: true, message: 'User is already exists.' })
          }
       } catch (err) {
          res.status(500).json({ message: err.message })

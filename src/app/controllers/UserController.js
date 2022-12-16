@@ -49,7 +49,7 @@ class UserController {
             await user.updateOne({ password: hashPass })
             res.status(200).json({ message: 'Password Changed' })
          } else {
-            res.status(403).json({ message: 'Wrong password' })
+            res.status(403).json({ error: true, message: 'Wrong password' })
          }
       } catch (err) {
          res.status(500).json({ message: err.message })

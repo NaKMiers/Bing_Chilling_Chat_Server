@@ -6,6 +6,7 @@ const MessageSchema = new Schema(
       roomId: String,
       senderId: String,
       text: String,
+      type: { type: String, default: 'text' },
    },
    { timestamps: true }
 )

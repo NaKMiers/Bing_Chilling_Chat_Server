@@ -48,37 +48,33 @@ class ChatController {
 
       try {
          const room = await RoomModel.findById(req.params.id)
-         if (room) {
-            if (!room.members.includes(userId)) {
-               if (room.password) {
-                  const validity = await bcrypt.compare(req.body.password, room.password)
-                  console.log(validity)
-                  if (validity) {
-                     const newRoom = await RoomModel.findByIdAndUpdate(
-                        req.params.id,
-                        { $push: { members: userId } },
-                        { new: true }
-                     )
-
-                     const { password, ...otherDetails } = newRoom._doc
-                     res.status(200).json(otherDetails)
-                  } else {
-                     res.status(403).json({ message: 'Wrong Password' })
-                  }
-               } else {
+         if (!room.members.includes(userId)) {
+            if (room.password) {
+               const validity = await bcrypt.compare(req.body.password, room.password)
+               console.log(validity)
+               if (validity) {
                   const newRoom = await RoomModel.findByIdAndUpdate(
                      req.params.id,
                      { $push: { members: userId } },
                      { new: true }
                   )
+
                   const { password, ...otherDetails } = newRoom._doc
                   res.status(200).json(otherDetails)
+               } else {
+                  res.status(403).json({ error: true, message: 'Wrong Password' })
                }
             } else {
-               res.status(403).json({ message: 'Your are already in room.' })
+               const newRoom = await RoomModel.findByIdAndUpdate(
+                  req.params.id,
+                  { $push: { members: userId } },
+                  { new: true }
+               )
+               const { password, ...otherDetails } = newRoom._doc
+               res.status(200).json(otherDetails)
             }
          } else {
-            res.status(403).json({ message: 'Room does not exists' })
+            res.status(403).json({ error: true, message: 'Your are already in room.' })
          }
       } catch (err) {
          res.status(500).json({ message: err.message })
